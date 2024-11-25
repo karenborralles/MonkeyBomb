@@ -20,7 +20,7 @@ self.onmessage = function(e) {
             }
         }
 
-        if (posicionX < limites.izquierda || posicionX > limites.derecha || posicionY < limites.arriba || posicionY > limites.abajo) {
+        if (posicionX < limites.izquierda || posicionX > limites.derecha || posicionY < limites.arriba || posicionY > limites.abajo) { //verifica si salio de los límites
             clearInterval(intervalo);
             self.postMessage({ idBala, accion: 'destruir' });
             self.close();

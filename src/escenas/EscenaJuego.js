@@ -10,7 +10,7 @@ class EscenaJuego extends Phaser.Scene {
         const fondo = this.add.image(0, 0, 'fondo').setOrigin(0).setDisplaySize(window.innerWidth, window.innerHeight);
 
         this.jugador2 = this.physics.add.sprite(285, 530, 'jugador2').setScale(0.30);
-        this.jugador2.setCollideWorldBounds(true);
+        this.jugador2.setCollideWorldBounds(true); //Límites
 
         this.jugador1 = this.physics.add.sprite(1110, 100, 'jugador1').setScale(0.26);
         this.jugador1.setCollideWorldBounds(true);
@@ -27,37 +27,16 @@ class EscenaJuego extends Phaser.Scene {
         this.jugador1.disparosRestantes = 0;
         this.jugador2.disparosRestantes = 0;
 
-        this.bombas = this.physics.add.group();
-
-        this.workerBombas.forEach((worker, indice) => {
-            worker.onmessage = (e) => {
-                if (e.data.explota) {
-                    this.explotarBomba(this.bombas.getChildren()[indice]);
-                    worker.terminate();  
-                }
-            };
-        });
-
-        const workerBomba = new Worker('src/hilos/workerBomba.js');
-
-        workerBomba.onmessage = (evento) => {
-            if (evento.data.accion === 'explota') {
-                const bomba = this.bombas.getChildren().find(b => b.idBomba === evento.data.idBomba);
-                if (bomba) {
-                    this.explotarBomba(bomba);
-                }
-            }
-        };
-
         this.workerSuperpoder = new Worker('src/hilos/workerSuperpoder.js');
-        this.workerSuperpoder.postMessage('iniciar');  
+        this.workerSuperpoder.postMessage('iniciar');
 
         this.workerSuperpoder.onmessage = (evento) => {
             if (evento.data.accion === 'generarSuperpoder' && this.superpoderesActivos < 3) {
-                this.generarSuperpoder();  
+                this.generarSuperpoder();
             }
         };
 
+        this.bombas = this.physics.add.group();
         this.disparos = this.physics.add.group();
         this.destructibles = this.physics.add.group();
         this.armas = this.physics.add.group();
@@ -133,9 +112,9 @@ class EscenaJuego extends Phaser.Scene {
         this.barraEspaciadora = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);  
         this.teclaEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
-        this.physics.add.collider(this.jugador1, this.destructibles); 
+        this.physics.add.collider(this.jugador1, this.destructibles); //no atravesar objetos destructibles
         this.physics.add.collider(this.jugador2, this.destructibles); 
-        this.physics.add.overlap(this.jugador1, this.armas, (jugador, arma) => this.recogerArma(jugador, arma), null, this);
+        this.physics.add.overlap(this.jugador1, this.armas, (jugador, arma) => this.recogerArma(jugador, arma), null, this); //toquen armas
         this.physics.add.overlap(this.jugador2, this.armas, (jugador, arma) => this.recogerArma(jugador, arma), null, this);
     }
 
@@ -196,11 +175,11 @@ class EscenaJuego extends Phaser.Scene {
         const y = Phaser.Math.Between(100, window.innerHeight - 100);
 
         const superpoder = this.physics.add.sprite(x, y, 'superpoder').setScale(0.07);  
-        superpoder.setCollideWorldBounds(true);
+        superpoder.setCollideWorldBounds(true); //Límites
 
         this.superpoderesActivos++;
 
-        this.physics.add.overlap(this.jugador1, superpoder, () => this.recogerSuperpoder(this.jugador1, superpoder), null, this);
+        this.physics.add.overlap(this.jugador1, superpoder, () => this.recogerSuperpoder(this.jugador1, superpoder), null, this); //tocan un superpoder
         this.physics.add.overlap(this.jugador2, superpoder, () => this.recogerSuperpoder(this.jugador2, superpoder), null, this);
     }
 
@@ -253,7 +232,7 @@ class EscenaJuego extends Phaser.Scene {
             jugador.disparosRestantes--;  
         }
     }
-
+    
     colocarBomba(jugador) {
         const bomba = this.bombas.create(jugador.x, jugador.y, 'bomba').setScale(0.17);
         bomba.body.immovable = true;
@@ -290,8 +269,7 @@ class EscenaJuego extends Phaser.Scene {
 
     crearExplosion(x, y) {
         const zonaExplosion = this.add.zone(x, y).setSize(32, 32);
-        this.physics.world.enable(zonaExplosion);
-        zonaExplosion.body.setAllowGravity(false);
+        this.physics.world.enable(zonaExplosion); //Detectar alguna colisión
         zonaExplosion.body.immovable = true;
 
         this.physics.overlap(zonaExplosion, [this.jugador1, this.jugador2], (tile, jugador) => {
@@ -309,14 +287,14 @@ class EscenaJuego extends Phaser.Scene {
                 }
             }
         });
-        this.time.delayedCall(200, () => zonaExplosion.destroy());
+        this.time.delayedCall(200, () => zonaExplosion.destroy()); //desaparezca
     }
 
     generarArma(x, y) {
         const arma = this.armas.create(x, y, 'arma').setScale(0.09);
         arma.setCollideWorldBounds(true);
-        arma.body.setSize(arma.width * 0.5, arma.height * 0.5);  
-        arma.body.setOffset(arma.width * 0.25, arma.height * 0.25);  
+        arma.body.setSize(arma.width * 0.5, arma.height * 0.5);  //estar cerca para agarrar el arma
+        arma.body.setOffset(arma.width * 0.25, arma.height * 0.25);   //colisión centrada
     }
 
     terminarJuego(jugador) {
